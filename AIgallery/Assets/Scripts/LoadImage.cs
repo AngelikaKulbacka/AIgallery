@@ -25,7 +25,7 @@ public class LoadImage : MonoBehaviour
     private ConcurrentQueue<(GameObject, string)> _generatedImages = new ConcurrentQueue<(GameObject, string)>();
 
     [SerializeField] private GameObject uiPanel;
-
+    public bool isProcessingImage = false;
 
     void Update()
     {
@@ -52,7 +52,7 @@ public class LoadImage : MonoBehaviour
         {
             Debug.Log(hitInfo.distance);
             Debug.Log(hitInfo.collider.gameObject.name);
-            if (hitInfo.collider.gameObject.TryGetComponent<BlankPainting>(out var _))
+            if (hitInfo.collider.gameObject.TryGetComponent<BlankPainting>(out var _) && !isProcessingImage)
             {
                 uiPanel.SetActive(true);
                 if (Input.GetKeyDown(KeyCode.E))
@@ -112,6 +112,7 @@ public class LoadImage : MonoBehaviour
 
     private void RunNeuralTransferStyle(GameObject targetObject, string baseImagePath,  string styleImagePath)
     {
+        isProcessingImage = true;
         Debug.Log("It's working!");
         string outputImagePath = Path.GetTempFileName() + ".jpg";
         string programPath = null;
@@ -127,7 +128,6 @@ public class LoadImage : MonoBehaviour
             programPath = "python";
             args = $"Assets\\Scripts\\algorithm.py {baseImagePath} {styleImagePath} {Iterations} {outputImagePath}";
         }
-
         Debug.Log($"Running: {programPath} {args}");
 
         var process = new Process
@@ -181,6 +181,7 @@ public class LoadImage : MonoBehaviour
 
     private void LoadMaterial(GameObject targetObject, Texture2D texture)
     {
+        isProcessingImage = false;
         if (texture != null)
         {
             Material newMaterial = new Material(Shader.Find("Standard"));

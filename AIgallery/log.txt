@@ -440,3 +440,6 @@
 439/441
 440/441
 Generating image took: loss=2355.45, time=159.89s
+['Assets\\Scripts\\algorithm.py', 'C:\\Users\\Angelika\\Desktop\\neural_style_transfer\\before_1.jpg', 'C:\\Users\\Angelika\\Desktop\\STUDIA\\AIgallery\\AIgallery\\Assets\\Media\\gwiazdzistanoc.png', '1', 'C:\\Users\\Angelika\\AppData\\Local\\Temp\\tmp8329827.tmp.jpg']
+1/2
+Generating image took: loss=51097.09, time=8.20s
