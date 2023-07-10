@@ -5,9 +5,18 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    public void Start()
+    public void StartGame()
     {
-        SceneManager.LoadSceneAsync(1);
+        if (LoadImage.UseGpu && LoadImage.CondaPath is not null)
+        {
+            SceneManager.LoadScene(1);
+        } else if (!LoadImage.UseGpu)
+        {
+            SceneManager.LoadScene(1);
+        } else
+        {
+            Debug.Log($"Cannot start UseGpu is {LoadImage.UseGpu} and CondaPath is {LoadImage.CondaPath}");
+        }
     }
 
     public void Quit()

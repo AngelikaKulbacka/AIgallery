@@ -2,17 +2,28 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from keras.applications import vgg19
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+import time
 
-# Open a file dialog to choose the base image
-Tk().withdraw()
-base_image_path = askopenfilename(title='Select Base Image')
+import sys
 
-style_reference_image_path = keras.utils.get_file(
-    "starry_night.jpg", "https://i.imgur.com/9ooB60I.jpg"
-)
-result_prefix = "image_generated"
+###########################
+import sys
+
+sys.stdout = open('log.txt', 'a')
+sys.stderr = open('log_err.txt', 'a')
+###########################
+
+
+# python script base_image_path style_image_path iterations output_image_path
+print(sys.argv, flush=True)
+if len(sys.argv) != 5:
+    print(f'Invalid ammout arguments expected 5 got {len(sys.argv)} with values {sys.argv}')
+    exit(1)
+
+base_image_path = sys.argv[1]
+style_reference_image_path = sys.argv[2]
+iterations = int(sys.argv[3])
+output_image_path = sys.argv[4]
 
 # Weights of the different loss components
 total_variation_weight = 1e-6
@@ -23,12 +34,6 @@ content_weight = 2.5e-8
 width, height = keras.utils.load_img(base_image_path).size
 img_nrows = 400
 img_ncols = int(width * img_nrows / height)
-
-
-from IPython.display import Image, display
-
-display(Image(base_image_path))
-display(Image(style_reference_image_path))
 
 
 def preprocess_image(image_path):
@@ -162,7 +167,6 @@ def compute_loss_and_grads(combination_image, base_image, style_reference_image)
     grads = tape.gradient(loss, combination_image)
     return loss, grads
 
-
 optimizer = keras.optimizers.SGD(
     keras.optimizers.schedules.ExponentialDecay(
         initial_learning_rate=100.0, decay_steps=100, decay_rate=0.96
@@ -173,23 +177,28 @@ base_image = preprocess_image(base_image_path)
 style_reference_image = preprocess_image(style_reference_image_path)
 combination_image = tf.Variable(preprocess_image(base_image_path))
 
-iterations = 4000
+iteration_losses = []
+
+start_time = time.time()  # Początek pomiaru czasu
 for i in range(1, iterations + 1):
+    print(f'{i}/{iterations+1}', flush=True)
     loss, grads = compute_loss_and_grads(
         combination_image, base_image, style_reference_image
     )
     optimizer.apply_gradients([(grads, combination_image)])
-    if i % 100 == 0:
-        print("Iteration %d: loss=%.2f" % (i, loss))
+
+    if i == iterations:
+        end_time = time.time()  # Koniec pomiaru czasu
+        iteration_time = end_time - start_time
+        print("Generating image took: loss=%.2f, time=%.2fs" % (loss, iteration_time), flush=True)
         img = deprocess_image(combination_image.numpy())
-        fname = result_prefix + "_at_iteration_%d.png" % i
-        keras.utils.save_img(fname, img)
-
-
-display(Image(result_prefix + "_at_iteration_4000.png"))
-
-# Save trained model
-model.save("trained_model.h5")
-
-# Load saved model
-loaded_model = keras.models.load_model("trained_model.h5")
+        keras.utils.save_img(output_image_path, img)
+    #
+    # if i % 100 == 0:
+    #     end_time = time.time()  # Koniec pomiaru czasu
+    #     iteration_time = end_time - start_time
+    #     print("Iteration %d: loss=%.2f, time=%.2fs" % (i, loss, iteration_time))
+    #     iteration_losses.append(loss.numpy())
+    #     img = deprocess_image(combination_image.numpy())
+    #     fname = result_prefix + "_at_iteration_%d.png" % i
+    #     keras.utils.save_img(fname, img)
